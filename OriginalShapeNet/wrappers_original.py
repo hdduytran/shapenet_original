@@ -273,6 +273,8 @@ class TimeSeriesEncoderClassifier(sklearn.base.BaseEstimator,
         @param verbose Enables, if True, to monitor which epoch is running in
                the encoder training.
         """
+        if not os.path.exists('./shapenet_results/'):
+            os.makedirs('./shapenet_results/')
         f = open(f'./shapenet_results/{dataset}_log_original_ratio_{ratio}_{random_state}.txt','a+')
         print(f"ratio {ratio} - random_state {random_state}")
         final_shapelet_num = 50
