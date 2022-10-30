@@ -18,6 +18,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 from sklearn.model_selection import KFold
 import timeit
+import os
 
 import utils
 import losses
