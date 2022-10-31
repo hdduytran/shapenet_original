@@ -128,7 +128,7 @@ def parse_arguments():
 
 
 if __name__ == '__main__':
-    for random_state in range(3):
+    for random_state in range(1):
         start = timeit.default_timer()
         args = parse_arguments()
         # f = open(f'../../shapenet_results/{args.dataset}_log_original_ratio_{args.ratio}_{random_state}.txt','a+')

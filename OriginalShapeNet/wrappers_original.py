@@ -18,6 +18,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 from sklearn.model_selection import KFold
 import timeit
+import os
 
 import utils
 import losses
@@ -246,14 +247,14 @@ class TimeSeriesEncoderClassifier(sklearn.base.BaseEstimator,
                 trigger_times += 1
                 if trigger_times >= patience:
                     loss_per_epoch = {'epochs': [j for j in range(1, i+2)], 'loss':train_lossList, 'valid_loss': valid_lossList}
-                    loss_df = pd.DataFrame.from_dict(loss_per_epoch).to_csv(f'../../shapenet_results/{dataset}_loss_per_epoch_original_ratio_{ratio}_{random_state}.csv', index=False)
+                    # loss_df = pd.DataFrame.from_dict(loss_per_epoch).to_csv(f'./shapenet_results/{dataset}_loss_per_epoch_original_ratio_{ratio}_{random_state}.csv', index=False)
                     return self.encoder
             else:
                 trigger_times = 0
             last_loss = current_loss
             
         loss_per_epoch = {'epochs': [j for j in range(1, i+2)], 'loss':train_lossList, 'valid_loss': valid_lossList}
-        loss_df = pd.DataFrame.from_dict(loss_per_epoch).to_csv(f'../../shapenet_results/{dataset}_loss_per_epoch_original_ratio_{ratio}_{random_state}.csv', index=False)
+        # loss_df = pd.DataFrame.from_dict(loss_per_epoch).to_csv(f'./shapenet_results/{dataset}_loss_per_epoch_original_ratio_{ratio}_{random_state}.csv', index=False)
 
         return self.encoder
 
@@ -273,6 +274,8 @@ class TimeSeriesEncoderClassifier(sklearn.base.BaseEstimator,
         @param verbose Enables, if True, to monitor which epoch is running in
                the encoder training.
         """
+        if not os.path.exists('./shapenet_results/'):
+            os.makedirs('./shapenet_results/')
         f = open(f'./shapenet_results/{dataset}_log_original_ratio_{ratio}_{random_state}.txt','a+')
         print(f"ratio {ratio} - random_state {random_state}")
         final_shapelet_num = 50
