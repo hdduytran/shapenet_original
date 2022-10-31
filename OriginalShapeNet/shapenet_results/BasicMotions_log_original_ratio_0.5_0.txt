@@ -1,0 +1,5 @@
+encode time:  135.44857046231627
+discovery time:  2.1755785630395015
+transformation time:  0.005439560984571775
+classification time:  1.1437634627024333e-05
+svm linear Accuracy: 1.0
