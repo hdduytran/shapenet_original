@@ -85,7 +85,7 @@ def fit_parameters(file, ratio, train, train_labels, test, test_labels, dataset,
            each loss term, instead of doing it after computing the whole loss.
     """
     classifier = wrappers_original.CausalCNNEncoderClassifier(gpu = int(gpu))
-
+    print('classifier created',classifier.gpu)
     # Loads a given set of parameters and fits a model with those
     hf = open(os.path.join(file), 'r')
     params = json.load(hf)
@@ -130,7 +130,7 @@ def parse_arguments():
 
 if __name__ == '__main__':
     args = parse_arguments()
-
+    print('args gpu',args.gpu)
     if not Path(args.save_path).exists():
         Path(args.save_path).mkdir(parents=True)
     csv_file = Path(str(args.save_path), str(args.dataset) + '.csv')
