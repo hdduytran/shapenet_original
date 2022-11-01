@@ -305,7 +305,7 @@ class TimeSeriesEncoderClassifier(sklearn.base.BaseEstimator,
         print("classification time: ", (classification_end - classification_start)/60)
         score = self.score(test, test_labels, shapelet, shapelet_dim, utility_sort_index, final_shapelet_num)
         print("svm linear Accuracy: "+str(score))
-        with open('./shapenet_result/{}.csv'.format(dataset), 'a') as f:
+        with open('./shapenet_results/{}.csv'.format(dataset), 'a') as f:
             f.write('{},{},{}\n'.format(ratio, random_state, score))
 
         return self
