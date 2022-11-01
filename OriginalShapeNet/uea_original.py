@@ -84,7 +84,7 @@ def fit_parameters(file, ratio, train, train_labels, test, test_labels, dataset,
     @param save_memory If True, save GPU memory by propagating gradients after
            each loss term, instead of doing it after computing the whole loss.
     """
-    classifier = wrappers_original.CausalCNNEncoderClassifier()
+    classifier = wrappers_original.CausalCNNEncoderClassifier(gpu = int(gpu))
 
     # Loads a given set of parameters and fits a model with those
     hf = open(os.path.join(file), 'r')
