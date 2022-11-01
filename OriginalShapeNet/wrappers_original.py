@@ -206,10 +206,8 @@ class TimeSeriesEncoderClassifier(sklearn.base.BaseEstimator,
                 scheduler = torch.optim.lr_scheduler.OneCycleLR(self.optimizer, max_lr=0.01, steps_per_epoch=len(train_generator), epochs=self.epochs-i)
                 train_loss_per_batch = []
                 for batch in train_generator:
-                    print('set gpu to batch', self.gpu)
                     if self.cuda:
                         batch = batch.cuda(self.gpu)
-                    print('batch gpu device: ', batch.get_device())
                     self.optimizer.zero_grad()
                     loss, dist_positive_list, dist_negative_list, dist_intra_positive_list, dist_intra_negative_list = self.loss(
                             batch, self.encoder, self.cuda, self.params,self.gpu, save_memory=save_memory
