@@ -11,6 +11,7 @@ import wrappers_original
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import StratifiedShuffleSplit
 from pyts.datasets import fetch_uea_dataset
+from pathlib import Path
 
 def load_UEA_dataset(path, dataset, train_ratio=0.9,random_state=0):
     """
@@ -128,50 +129,57 @@ def parse_arguments():
 
 
 if __name__ == '__main__':
-    for random_state in range(1):
-        start = timeit.default_timer()
-        args = parse_arguments()
-        # f = open(f'../../shapenet_results/{args.dataset}_log_original_ratio_{args.ratio}_{random_state}.txt','a+')
-        if args.cuda and not torch.cuda.is_available():
-            print("CUDA is not available, proceeding without it...")
-            args.cuda = False
+    args = parse_arguments()
 
-        train, train_labels, test, test_labels = load_UEA_dataset(
-            args.path, args.dataset, args.ratio, random_state
-        )
-        cluster_num = 100
-        if not args.load and not args.fit_classifier:
-            print('start new network training')
-            classifier = fit_parameters(
-            args.hyper, args.ratio, train, train_labels, test, test_labels, args.dataset, args.cuda, args.gpu, args.save_path, cluster_num, random_state
-            )
-        else:
-            classifier = wrappers_original.CausalCNNEncoderClassifier()
-            hf = open(
-                os.path.join(
-                    args.save_path, args.dataset + '_parameters.json'
-                ), 'r'
-            )
-            hp_dict = json.load(hf)
-            hf.close()
-            hp_dict['cuda'] = args.cuda
-            hp_dict['gpu'] = args.gpu
-            classifier.set_params(**hp_dict)
-            classifier.load(os.path.join(args.save_path, args.dataset))
+    if not Path(args.save_path).exists():
+        Path(args.save_path).mkdir(parents=True)
+    csv_file = Path(str(args.save_path), str(args.dataset) + '.csv')
+    if csv_file.exists():
+        df = pd.read_csv(csv_file)
+    else:
+        df = pd.DataFrame(columns=['ratio', 'random_state', 'accuracy'])
+        df.to_csv(csv_file, index=False)
+    
+    for random_state in range(3):
+        for ratio in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,1]:
+            if ratio == 1 & random_state != 0:
+                continue
+            try:
+                if not df[(df['ratio'] == ratio) & (df['random_state'] == random_state)].empty:
+                    print('Already done')
+                    continue
+                start = timeit.default_timer()
+                if args.cuda and not torch.cuda.is_available():
+                    print("CUDA is not available, proceeding without it...")
+                    args.cuda = False
 
-        if not args.load:
-            if args.fit_classifier:
-                classifier.fit_classifier(classifier.encode(train), train_labels)
-            classifier.save(
-                os.path.join(args.save_path, args.dataset), args.ratio, random_state
-            )
-            with open(
-                os.path.join(
-                    args.save_path, args.dataset + '_parameters.json'
-                ), 'w'
-            ) as fp:
-                json.dump(classifier.get_params(), fp)
+                train, train_labels, test, test_labels = load_UEA_dataset(
+                    args.path, args.dataset, ratio, random_state
+                )
+                cluster_num = 100
+                if not args.load and not args.fit_classifier:
+                    print('start new network training')
+                    classifier = fit_parameters(
+                    args.hyper, ratio, train, train_labels, test, test_labels, args.dataset, args.cuda, args.gpu, args.save_path, cluster_num, random_state
+                    )
 
-        end = timeit.default_timer()
-        print(f"All time for ratio {args.ratio} random_state {random_state}: ", (end- start)/60)
+                if not args.load:
+                    if args.fit_classifier:
+                        classifier.fit_classifier(classifier.encode(train), train_labels)
+                    classifier.save(
+                        os.path.join(args.save_path, args.dataset), ratio, random_state
+                    )
+                    with open(
+                        os.path.join(
+                            args.save_path, args.dataset + '_parameters.json'
+                        ), 'w'
+                    ) as fp:
+                        json.dump(classifier.get_params(), fp)
+
+                end = timeit.default_timer()
+                print(f"All time for ratio {ratio} random_state {random_state}: ", (end- start)/60)
+            except Exception as e:
+                print('ratio {} random_state {} failed'.format(ratio, random_state))
+                print(e)
+                continue
 

@@ -206,8 +206,8 @@ class TimeSeriesEncoderClassifier(sklearn.base.BaseEstimator,
                 scheduler = torch.optim.lr_scheduler.OneCycleLR(self.optimizer, max_lr=0.01, steps_per_epoch=len(train_generator), epochs=self.epochs-i)
                 train_loss_per_batch = []
                 for batch in train_generator:
-                    # if self.cuda:
-                    #     batch = batch.cuda(self.gpu)
+                    if self.cuda:
+                        batch = batch.cuda(self.gpu)
                     self.optimizer.zero_grad()
                     loss, dist_positive_list, dist_negative_list, dist_intra_positive_list, dist_intra_negative_list = self.loss(
                             batch, self.encoder, self.cuda, self.params, save_memory=save_memory
@@ -246,14 +246,14 @@ class TimeSeriesEncoderClassifier(sklearn.base.BaseEstimator,
             if current_loss > last_loss:
                 trigger_times += 1
                 if trigger_times >= patience:
-                    loss_per_epoch = {'epochs': [j for j in range(1, i+2)], 'loss':train_lossList, 'valid_loss': valid_lossList}
+                    # loss_per_epoch = {'epochs': [j for j in range(1, i+2)], 'loss':train_lossList, 'valid_loss': valid_lossList}
                     # loss_df = pd.DataFrame.from_dict(loss_per_epoch).to_csv(f'./shapenet_results/{dataset}_loss_per_epoch_original_ratio_{ratio}_{random_state}.csv', index=False)
                     return self.encoder
             else:
                 trigger_times = 0
             last_loss = current_loss
             
-        loss_per_epoch = {'epochs': [j for j in range(1, i+2)], 'loss':train_lossList, 'valid_loss': valid_lossList}
+        # loss_per_epoch = {'epochs': [j for j in range(1, i+2)], 'loss':train_lossList, 'valid_loss': valid_lossList}
         # loss_df = pd.DataFrame.from_dict(loss_per_epoch).to_csv(f'./shapenet_results/{dataset}_loss_per_epoch_original_ratio_{ratio}_{random_state}.csv', index=False)
 
         return self.encoder
@@ -276,7 +276,6 @@ class TimeSeriesEncoderClassifier(sklearn.base.BaseEstimator,
         """
         if not os.path.exists('./shapenet_results/'):
             os.makedirs('./shapenet_results/')
-        f = open(f'./shapenet_results/{dataset}_log_original_ratio_{ratio}_{random_state}.txt','a+')
         print(f"ratio {ratio} - random_state {random_state}")
         final_shapelet_num = 50
         # Fitting encoder
@@ -285,28 +284,29 @@ class TimeSeriesEncoderClassifier(sklearn.base.BaseEstimator,
                                         ratio, X, dataset=dataset, random_state=random_state, save_memory=save_memory, verbose=verbose
                                         )
         encoder_end = timeit.default_timer()
-        print("encode time: ", (encoder_end- encoder_start)/60, file=f)
+        print("encode time: ", (encoder_end- encoder_start)/60)
 
         # # shapelet discovery
         discovery_start = timeit.default_timer()
         shapelet, shapelet_dim, utility_sort_index = self.shapelet_discovery(X, y, cluster_num, batch_size=50)
         discovery_end = timeit.default_timer()
-        print("discovery time: ", (discovery_end- discovery_start)/60, file=f)
+        print("discovery time: ", (discovery_end- discovery_start)/60)
 
         # # shapelet transformation
         transformation_start = timeit.default_timer()
         features = self.shapelet_transformation(X, shapelet, shapelet_dim, utility_sort_index, final_shapelet_num)
         transformation_end = timeit.default_timer()
-        print("transformation time: ", (transformation_end - transformation_start)/60, file=f)
+        print("transformation time: ", (transformation_end - transformation_start)/60)
 
         # # SVM classifier training
         classification_start = timeit.default_timer()
         self.classifier = self.fit_svm_linear(features, y)
         classification_end = timeit.default_timer()
-        print("classification time: ", (classification_end - classification_start)/60, file=f)
-        print("svm linear Accuracy: "+str(self.score(test, test_labels, shapelet, shapelet_dim, utility_sort_index, final_shapelet_num)), file=f)
-
-        # self.save_shapelet(prefix_file, shapelet, shapelet_dim)
+        print("classification time: ", (classification_end - classification_start)/60)
+        score = self.score(test, test_labels, shapelet, shapelet_dim, utility_sort_index, final_shapelet_num)
+        print("svm linear Accuracy: "+str(score))
+        with open('./shapenet_result/{}.csv'.format(dataset), 'a') as f:
+            f.write('{},{},{}\n'.format(ratio, random_state, score))
 
         return self
 
