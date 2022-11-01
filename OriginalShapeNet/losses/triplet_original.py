@@ -15,11 +15,11 @@ class PNTripletLoss(torch.nn.modules.loss._Loss):
         if self.compared_length is None:
             self.compared_length = np.inf
 
-    def forward(self, batch, encoder, cuda, params, save_memory=False):
+    def forward(self, batch, encoder, cuda, params,gpu=1, save_memory=False):
 
      slide_num = 3
      alpha = 0.6
-     loss = torch.DoubleTensor([1]).to('cuda') if cuda else torch.DoubleTensor([1]) 
+     loss = torch.DoubleTensor([1]).to('cuda:'+str(gpu)) if cuda else torch.DoubleTensor([1]) 
      dist_positive_list = []
      dist_negative_list = []
      dist_intra_positive_list = []
@@ -39,16 +39,16 @@ class PNTripletLoss(torch.nn.modules.loss._Loss):
          num_cluster_set = Counter(cluster_label) 
 
          # loss of each cluster
-         loss_cluster = torch.DoubleTensor([1]).to('cuda') if cuda else torch.DoubleTensor([1])
+         loss_cluster = torch.DoubleTensor([1]).to('cuda:'+str(gpu)) if cuda else torch.DoubleTensor([1])
          for i in range(num_cluster):
              if num_cluster_set[i] < 2:
                  continue
              cluster_i = points[np.where(cluster_label == i)]
              distance_i = kmeans.transform(cluster_i)[:,i]
-             dist_positive = torch.DoubleTensor([1]).to('cuda') if cuda else torch.DoubleTensor([1])
-             dist_intra_positive = torch.DoubleTensor([1]).to('cuda') if cuda else torch.DoubleTensor([1])
-             dist_intra_negative = torch.DoubleTensor([1]).to('cuda') if cuda else torch.DoubleTensor([1])
-             dist_negative = torch.DoubleTensor([1]).to('cuda') if cuda else torch.DoubleTensor([1])
+             dist_positive = torch.DoubleTensor([1]).to('cuda:'+str(gpu)) if cuda else torch.DoubleTensor([1])
+             dist_intra_positive = torch.DoubleTensor([1]).to('cuda:'+str(gpu)) if cuda else torch.DoubleTensor([1])
+             dist_intra_negative = torch.DoubleTensor([1]).to('cuda:'+str(gpu)) if cuda else torch.DoubleTensor([1])
+             dist_negative = torch.DoubleTensor([1]).to('cuda:'+str(gpu)) if cuda else torch.DoubleTensor([1])
              if num_cluster_set[i] >= 250:
                  num_positive = 50
              else:
@@ -61,7 +61,7 @@ class PNTripletLoss(torch.nn.modules.loss._Loss):
              representation_anc = torch.from_numpy(points[anchor_positive[0]])
              # transfer 1D to 3D
              representation_anc = torch.reshape(representation_anc, (1,1,np.shape(points)[1]))
-             representation_anc = representation_anc.to('cuda') if cuda else representation_anc
+             representation_anc = representation_anc.to('cuda:'+str(gpu)) if cuda else representation_anc
 
              # encoder anchor
              representation_anc = encoder(representation_anc)
@@ -72,7 +72,7 @@ class PNTripletLoss(torch.nn.modules.loss._Loss):
                  representation_pos = torch.from_numpy(points[anchor_positive[l]])
                  # transfer 1D to 3D
                  representation_pos = torch.reshape(representation_pos, (1,1,np.shape(points)[1]))
-                 representation_pos = representation_pos.to('cuda') if cuda else representation_pos
+                 representation_pos = representation_pos.to('cuda:'+str(gpu)) if cuda else representation_pos
 
                  # encode positive
                  representation_pos = encoder(representation_pos)
@@ -96,12 +96,12 @@ class PNTripletLoss(torch.nn.modules.loss._Loss):
 
                  representation_intra_pos_0 = torch.from_numpy(points[anchor_positive[first_index]])
                  representation_intra_pos_0 = torch.reshape(representation_intra_pos_0, (1,1,np.shape(points)[1]))
-                 representation_intra_pos_0 = representation_intra_pos_0.to('cuda') if cuda else representation_intra_pos_0
+                 representation_intra_pos_0 = representation_intra_pos_0.to('cuda:'+str(gpu)) if cuda else representation_intra_pos_0
                  representation_intra_pos_0 = encoder(representation_intra_pos_0)
 
                  representation_intra_pos_1 = torch.from_numpy(points[anchor_positive[second_index]])
                  representation_intra_pos_1 = torch.reshape(representation_intra_pos_1, (1,1,np.shape(points)[1]))
-                 representation_intra_pos_1 = representation_intra_pos_1.to('cuda') if cuda else representation_intra_pos_1
+                 representation_intra_pos_1 = representation_intra_pos_1.to('cuda:'+str(gpu)) if cuda else representation_intra_pos_1
                  representation_intra_pos_1 = encoder(representation_intra_pos_1)
 
                  intra_minus_positive = representation_intra_pos_0 - representation_intra_pos_1
@@ -109,7 +109,7 @@ class PNTripletLoss(torch.nn.modules.loss._Loss):
 
              # negative part
              for k in range(num_cluster):
-                 dist_cluster_k_negative = torch.DoubleTensor([1]).to('cuda') if cuda else torch.DoubleTensor([1])
+                 dist_cluster_k_negative = torch.DoubleTensor([1]).to('cuda:'+str(gpu)) if cuda else torch.DoubleTensor([1])
                  if k == i:
                      continue
                  else:
@@ -125,7 +125,7 @@ class PNTripletLoss(torch.nn.modules.loss._Loss):
                          representation_neg = torch.from_numpy(points[kmeans.labels_== k][negative_cluster_k[j]])
                          # transfer 1D to 3D
                          representation_neg = torch.reshape(representation_neg, (1,1,np.shape(points)[1]))
-                         representation_neg = representation_neg.to('cuda') if cuda else representation_neg
+                         representation_neg = representation_neg.to('cuda:'+str(gpu)) if cuda else representation_neg
                          # encode negative
                          representation_neg = encoder(representation_neg)
 
@@ -149,12 +149,12 @@ class PNTripletLoss(torch.nn.modules.loss._Loss):
 
                      representation_intra_neg_0 = torch.from_numpy(points[kmeans.labels_== k][negative_cluster_k[first_index]])
                      representation_intra_neg_0 = torch.reshape(representation_intra_neg_0, (1,1,np.shape(points)[1]))
-                     representation_intra_neg_0 = representation_intra_neg_0.to('cuda') if cuda else representation_intra_neg_0
+                     representation_intra_neg_0 = representation_intra_neg_0.to('cuda:'+str(gpu)) if cuda else representation_intra_neg_0
                      representation_intra_neg_0 = encoder(representation_intra_neg_0)
 
                      representation_intra_neg_1 = torch.from_numpy(points[kmeans.labels_== k][negative_cluster_k[second_index]])
                      representation_intra_neg_1 = torch.reshape(representation_intra_neg_1, (1,1,np.shape(points)[1]))
-                     representation_intra_neg_1 = representation_intra_neg_1.to('cuda') if cuda else representation_intra_neg_1
+                     representation_intra_neg_1 = representation_intra_neg_1.to('cuda:'+str(gpu)) if cuda else representation_intra_neg_1
                      representation_intra_neg_1 = encoder(representation_intra_neg_1)
 
                      intra_minus_negative = representation_intra_neg_0 - representation_intra_neg_1
