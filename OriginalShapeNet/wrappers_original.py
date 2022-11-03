@@ -210,7 +210,7 @@ class TimeSeriesEncoderClassifier(sklearn.base.BaseEstimator,
                         batch = batch.cuda(self.gpu)
                     self.optimizer.zero_grad()
                     loss, dist_positive_list, dist_negative_list, dist_intra_positive_list, dist_intra_negative_list = self.loss(
-                            batch, self.encoder, self.cuda, self.params, save_memory=save_memory
+                            batch, self.encoder, self.cuda, self.params,self.gpu, save_memory=save_memory
                     )
                     loss.backward()
                     self.optimizer.step()
@@ -229,8 +229,8 @@ class TimeSeriesEncoderClassifier(sklearn.base.BaseEstimator,
                 # Early stopping
                 valid_loss_per_batch = []
                 for batch in valid_generator:
-                    # if self.cuda:
-                    #     batch = batch.cuda(self.gpu)
+                    if self.cuda:
+                        batch = batch.cuda(self.gpu)
                     self.optimizer.zero_grad()
                     valid_loss, _, _, _, _ = self.loss(
                             batch, self.encoder,self.cuda, self.params, save_memory=save_memory
